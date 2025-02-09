@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parts Management System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; }
+        .header { background: #333; color: white; padding: 15px; display: flex; align-items: center; }
+        .logo { height: 40px; margin-right: 20px; }
+        .container { margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        input, button { padding: 8px; font-size: 16px; margin: 5px; }
+        .button-group { margin-bottom: 20px; }
+		.highlight-red { color: red; font-weight: bold; }
+        .highlight-blue { color: blue; font-weight: bold; }
+        .highlight-green { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="logo.png" alt="Company Logo" class="logo">
+        <h1>Parts Management System</h1>
+    </div>
+
+    <div class="container">
+        <div class="button-group">
+            <a href="add-part.html"><button>Add New Part</button></a>
+            <a href="edit-part.html"><button>Edit/Delete Parts</button></a>
+        </div>
+
+        <input type="text" id="searchInput" placeholder="Search by part number, name, or description">
+        <button onclick="handleSearch()">Search</button>
+        <button onclick="resetSearch()">Reset</button>
+        <button onclick="showAllParts()">Show All Parts</button>
+
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Part Number</th>
+                    <th>Part Name</th>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Supplier</th>
+                    <th>Lead Time</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function handleSearch() {
+            const query = document.getElementById('searchInput').value;
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/search?q=${query}`);
+                const results = await response.json();
+                updateTable(results);
+            } catch (error) {
+                console.error("Search error:", error);
+            }
+        }
+
+        async function showAllParts() {
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/search?q=`);
+                const results = await response.json();
+                // Sort parts by part name
+                results.sort((a, b) => a.part_name.localeCompare(b.part_name));
+                updateTable(results);
+            } catch (error) {
+                console.error("Error fetching all parts:", error);
+            }
+        }
+
+        function resetSearch() {
+            document.getElementById('searchInput').value = '';
+            document.querySelector('#resultsTable tbody').innerHTML = '';
+        }
+
+        function updateTable(results) {
+            const tbody = document.querySelector('#resultsTable tbody');
+            tbody.innerHTML = '';
+
+            results.forEach(part => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${part.part_number}</td>
+                    <td>${part.part_name}</td>
+                    <td>${part.description}</td>
+                    <td>${part.quantity}</td>
+                    <td>$${part.unit_price.toFixed(2)}</td>
+                    <td>${part.supplier}</td>
+                    <td>${part.lead_time} days</td>
+                    <td>${part.notes}</td>
+					<td>${highlightWords(part.part_number)}</td>
+                    <td>${highlightWords(part.part_name)}</td>
+                    <td>${highlightWords(part.description)}</td>
+                    <td>${part.quantity}</td>
+                    <td>$${part.unit_price.toFixed(2)}</td>
+                    <td>${highlightWords(part.supplier)}</td>
+                    <td>${part.lead_time} days</td>
+                    <td>${highlightWords(part.notes)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
